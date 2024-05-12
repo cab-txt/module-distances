@@ -1,0 +1,372 @@
+---
+title: "Multimodal Distances Tool R"
+author: "Camila Barros"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Info documents
+
+This tutorial can be used to compare multiple annotations in ELAN using the multimodal-annotation-distance tool. It requires an annotated file in ELAN (.eaf) format and outputs a table with the reference tier and the compared tiers. Disclaimer: It does not directly outputs the data in tidy format.
+
+The tool multimodal-annotation-distance can be pulled from: <https://github.com/JorgeFCS/multimodal-annotation-distance.git>
+
+To cite the tool: Barros, Camila A.; Ciprián-Sánchez, Jorge Francisco; Mendes Santos, Saulo. (2024) *A Tool for Determining Distances and Overlaps between Multimodal Annotations.* In LREC-COLING 2024
+
+## Multimodal annotation tools
+
+The multimodal-annotation-distance tool allows you to use a tier as a reference to compare other tiers and how they are displaced in time regarding one to another. The following scheme indicates reference and comparison tiers.
+
+In a annotation, we can have the following structure:
+
+![Figure 1: Tier structure](images/1reference_tier_edit.png)
+
+The tool will provide the time displacement between the onsets and offsets of each boundary of the reference tier to the comparison tiers, shown in the dotted lines. Each one of this tiers can be defined by the user, as well as if this comparison should account for the span of the reference tier (*span comparison*) or only the points in time of the offsets (*point comparison*).
+
+We will use the span comparison in this tutorial. The *span comparison* takes the time spans of each annotation tier into consideration, comparing the values of the boundaries of the reference tier (bold line in blue) to the onset and offset values of one or more compared tiers (dotted lines in orange and red). Looking at these boundaries, it is possible to infer whether the comparison tiers start before or after a given tier, how much they overlap (ratio), and the duration of the corresponding tiers. A time buffer can be used to determinate if reference and comparison tiers can be considered as co-occurring even when not exactly overlapping.
+
+In case you want to use the *point comparison*, you should have in mind that this function searches for the offset of the reference tier and outputs the closest match in the compared tiers. It is specially designed to analyze items that do not have a span in time, such as apexes or pitch accents (when considered points in time).
+
+### Basic validation previous to use
+
+This tool can be used for a single file as well as for a batch. If you are using it for a batch, be sure that all files have the *exact* same tier name, otherwise it will fail. The media files will not be used at all.
+
+### Installation -- in the command line
+
+1.  Clone this repository on your local computer.
+2.  In the command line, go to the repository containing the multimodal_annotation_distance.py file.
+3.  Create and activate a virtual environment of your preference (e.g., Conda or virtualenv).
+4.  To install the required dependencies, you can use the provided requirements.txt file by typing pip install -r requirements.txt in the command line.
+
+## Running tool
+
+```{python installing requirements}
+## go to cmd to run config.ini file #
+import os
+#
+#current_directory = os.getcwd()
+print("Current working directory:", current_directory)
+#
+%cd multimodal-annotation-distance
+#
+### installing requirements
+!pip install -r requirements.txt
+#
+```
+
+### Setting up the config.ini file
+
+The configuration file indicates which tiers you want to compare and how do you want to compare them. It requires following information: - Path of the directory containing the .eaf files to analyze. - Path to the directory in which to save the results. - Name of the results file with extension (e.g., results.csv) - Reference tier against to which we want to perform the comparison. - Value in the reference tier to search for. - Mode of operation. Either `span` or `point_comparison` - Buffer time in ms (if you do not want a buffer time, type 0) - Tiers to compare against the reference tier. - Enter the comparison tiers separated by commas (e.g.: tier1,tier2)
+
+### Usage
+
+Activate your Python virtual environment. To run the program, inside the directory where the mu,ltimodal_annotation_distance.py file is located, type the following in the command line: python multimodal_annotation_distance.py --config-file-path path/to/config.ini.
+
+```{python running tool}
+## running multimodal-distance-tool -- it can take a bit to run ##
+!python multimodal_annotation_distance.py --config-file-path ./config_example_span.ini
+```
+
+Now that you have the dataset, we can work with it in R.
+
+## Data Analysis - case study
+
+First, import the dataset.
+
+```{r install packages and importing dataframe, warning=FALSE, include=FALSE}
+# install packages and importing dataframe #
+## packages
+library(tidyverse)
+library(gridExtra)
+library(ggpubr)
+library(viridis)
+
+# load datasets #
+## config.ini:
+## span_PAR : mode span, reference unit InfoStructure, reference value PAR, comparison between GE-Phrase,GE-Phase
+span_PAR <- read.csv("H:/2024n1 Envision Box - LREC/multimodal-annotation-distance/bgest_spancomparison.csv")
+
+```
+
+The dataset for the *span comparison* should look like this, with following values:
+
+1.  InfoStructure_PAR_start_ms: onset of the searched annotation value on the reference tier in milliseconds;
+
+2.  InfoStructure_PAR_end_ms: offset of the searched annotation value on the reference tier in milliseconds;
+
+3.  InfoStructure_PAR_duration: duration of the searched annotation value on the reference tier in milliseconds. It is calculated as follows:\
+    `ref_tier_duration = (ref_tier_end + buffer) - (ref_tier_start - buffer)`
+
+4.  Buffer_ms: assigned buffer time;
+
+5.  Tier: compared tier, ordered first by relation to reference tier then by time;
+
+6.  Value: annotation values for each unit in the compared tiers;
+
+7.  Begin_ms: onset of the compared tier for each annotation value (listed in item 6);
+
+8.  End_ms: offset of the compared tier for each annotation value (listed in item 6);
+
+9.  Duration: duration of the compared tier for each annotation value (listed in item 6). It is obtained as follows:\
+    `comparison_tier_duration = comparison_tier_end - comparison_tier_start`
+
+10. Overlap_time: provides the time in milliseconds for all cases in which there is an overlap between the reference tier and the compared tier and is calculated as follows:\
+    `overlap = min((ref_tier_end + buffer)/ comparison_tier_end) - max((ref_tier_start - buffer), comparison_tier_start)`
+
+11. Overlap_ratio: provides the proportion of the overlap time (rounded to three decimal places) in relation to the length of the reference value and is obtained as follows:\
+    `overlap_ratio = overlap_time / ref_tier_duration`
+
+12. Diff_start: provides the starting time of the comparison tier in relation to the start of the reference value as follows:\
+    `diff_start = (ref_tier_start - buffer) - comparison_tier_start`\
+    For *diff_start*, a positive value means that the unit on the compared tier starts before the unit on the reference tier (considering the buffer time). A negative value means that the unit on the compared tier starts after the unit on the reference tier (considering the buffer time). Null values means that they match perfectly.
+
+13. Diff_end: provides the ending time of the comparison tier in relation to the end of the reference value as follows:\
+    `diff_end = (ref_tier_end + buffer) - comparison_tier_end`\
+    For the *diff \_end*, a positive value means that the unit on the compared tier ends before the unit on the reference tier (considering the buffer time). A negative value means that the unit on the compared tier ends after the unit on the reference tier (considering the buffer time). Null values means that they match perfectly.
+
+As points cannot overlap with another unit, the mode *point comparison* of comparison outputs only the values (1) to (9).
+
+```{r checking dataset}
+
+str(span_PAR)
+
+```
+
+### Pre-processing
+
+It might require some pre-processing, such as mislabeled data or duplicates.
+
+```{r pre-processing data}
+# pre-processing mislabeled data #
+## replaces "hold" for "stroke hold" for consistency ##
+span_PAR <- span_PAR %>%
+  mutate(Value = recode(Value, hold = "stroke hold"))
+
+## fix duplicates ##
+### Check for duplicated rows ###
+duplicates <- duplicated(span_PAR)
+
+### Remove duplicated rows, keeping only the first instance ###
+span_nodup <- span_PAR[!duplicates, ]
+
+```
+
+### Dispersion
+
+Now that the data is clean of duplicates, we can focus on the analysis. We want to check how the overlap ratio, i.e., the amount of overlap that strokes and gesture phrases have with informational unit. The informational unit is delimited in this dataset as non terminated units.
+
+```{r check the dispersion}
+# sorting data frames #
+span_gephrase <- span_nodup %>%
+  filter(Tier == "GE-Phrase")
+
+span_stroke <- span_nodup %>%
+  filter(Value == "stroke")
+
+# dispersion #
+## looking at each value (preparation, stroke, retraction, hold) within a gesture se,
+## for the median (M) and standard deviation (SD) for centered start times (CST) centered end times(CET)
+dispersion_phrase <- span_gephrase %>%
+    summarise(Value = "Gesture phrase",
+            Total   = n(),
+            CST_M   = median(Diff_start),
+            CST_SD  = round(sd(Diff_start),1),
+            CET_M   = median(Diff_end),
+            CET_SD  = round(sd(Diff_end),1))
+
+dispersion_stroke <- span_nodup %>%
+  filter(Tier == "GE-Phase")%>%
+  group_by(Value)%>%
+  summarise(Total   = n(),
+           CST_M    = median(Diff_start),
+           CST_SD   = round(sd(Diff_start),1),
+           CET_M    = median(Diff_end),
+           CET_SD   = round(sd(Diff_end),1))
+
+(dispersion_combo <- rbind(dispersion_phrase, dispersion_stroke))
+
+```
+
+In this dispersion table we can understand if the compared tier annotations, gesture phrases and strokes, start after or before the reference tier selected annotation. As CST_M is positive and CET_M is negative, we can infer that the gesture phrase tends to start before and to end after the prosodic unit. The stroke, on the other hand, has the opposite pattern, which makes sense as it is included in the gesture phrase.
+
+What we can also state from those values is they show high variance, as all standard deviations are above 640ms. In comparison to the informational unit studied, PAR, which has a median duration of 1250ms (SD= 547.95). This indicates that there is variation that can span up to half of the analyzed unit and three times the value of 200 ms normally assumed in the literature (Loehr, 2004) as a degree of mismatch between a prosodic and a gestural event.
+
+```{r creating images -- combo, eval=FALSE, include=FALSE}
+##### Figures and tables and graphics ####
+## in one graph ##
+point_combo <- ggplot(span_PAR %>%
+                        filter(Value == "stroke" | (str_detect(Value, "^[0-9]{3}$"))),
+                      aes(x = Overlap_ratio, y = Diff_start, color = Tier, shape = Tier))+
+                 geom_point(size = 2.4, alpha = .7)+
+                 theme_bw()+
+                 theme(legend.position = "top", plot.title = element_text(hjust = 0.5))+
+                 labs(title="Relation between starting time and overlap ratio",
+                      x ="Overlap ratio for gesture phrase and stroke", y = "Centered starting time (ms)")+
+                 scale_color_viridis_d(option = "D", direction = -1, labels = c("stroke", "gesture-phrase"))+
+                 scale_shape(labels = c("stroke", "gesture-phrase"))+
+                 geom_vline(xintercept=.5, color="darkblue", linewidth=.5)+
+                 geom_hline(yintercept = 0, color="#151515", linewidth=.5)
+point_combo
+
+```
+
+### Visualizing overlap ratio and centered starting times
+
+Another way to see this is to plot a scatterplot that takes the starting time of the comparison tiers (centered values) by the overlap ratio (Figure 2). The thought behind this is that the higher the overlap, the tighter is the connection between the reference tier and comparison tier. Here the dispersion is color coded regarding the quantiles, purple represents the second quartile and the third quartiles; and grey stands for the first and fourth quartiles. Points on the black horizontal line (0 value) indicate that the starting points of the gesture phrase (upper graph) or stroke (lower graph) perfectly match the PAR's onset. The blue vertical line indicates when the overlap has a 50% ratio.
+
+```{r creating images -- distribution on strokes and ge-phrases}
+# based on quantiles #
+# Define a vector of three Viridis colors from the "D" palette for the quant
+selected_colors <- viridis_pal(option = "D")(50)
+#quantil"#440154FF" line"#2D718EFF" outlier"#FDE725FF"
+
+# calculate the quantiles for phrases
+quants <- quantile(span_gephrase$Diff_start, c(0.25, 0.75))
+span_gephrase$quant  <- with(span_gephrase, factor(ifelse(Diff_start < quants[1], 0, 
+                                      ifelse(Diff_start < quants[2], 1, 2))))
+
+# scatter phrases
+point_phrase <- ggplot(span_gephrase, aes(Overlap_ratio, Diff_start)) +
+                 geom_point(aes(colour = quant), alpha = .8, shape = "triangle", size = 2.4) +
+                 scale_colour_manual(values = c("#8B939C", "#440154FF", "#8B939C"), 
+                                     labels = c("0-0.25", "0.25-0.75", "0.75-1"))+
+                 theme_bw()+
+                 theme(legend.position = "top", plot.title = element_text(hjust = 0.5))+
+                 labs(title="",
+                      x ="Overlap ratio for gesture phrase", y = "Centered starting time (ms)",
+                      color = "Quantiles")+
+                 geom_vline(xintercept=.5, color="darkblue", linewidth=.5)+
+                 geom_hline(yintercept = 0, color="#151515", linewidth=.5)
+
+# calculate the quantiles for strokes
+quants <- quantile(span_stroke$Diff_start, c(0.25, 0.75))
+span_stroke$quant  <- with(span_stroke, factor(ifelse(Diff_start < quants[1], 0, 
+                                                          ifelse(Diff_start < quants[2], 1, 2))))
+# ploting phrases
+point_stroke <- ggplot(span_stroke, aes(Overlap_ratio, Diff_start)) +
+                 geom_point(aes(colour = quant), alpha = .7, shape = "triangle", size = 2.4) +
+                 scale_colour_manual(values = c("#8B939C", "#440154FF", "#8B939C"), 
+                                     labels = c("0-0.25", "0.25-0.75", "0.75-1"))+
+                 theme_bw()+
+                 theme(legend.position = "top", plot.title = element_text(hjust = 0.5))+
+                 labs(title="",
+                      x ="Overlap ratio for strokes", y = "Centered starting time (ms)",
+                      color = "Quantiles")+
+                 geom_vline(xintercept=.5, color="darkblue", linewidth=.5)+
+                 geom_hline(yintercept = 0, color="#151515", linewidth=.5)
+
+grid.arrange(point_phrase, point_stroke, ncol = 2, nrow  = 1)
+
+```
+Figure 2: Overlap ratio by centered times for gesture phrase and strokes
+
+### Correlation of alignment of onsets and overlap ratio for gesture phrase and strokes
+
+What occurs with the onset alignment of PAR and the gesture-phrase containing the stroke? It would seem logical to assume that if a gesture-phrase overlaps more with PAR, it would also overlap more with its corresponding stroke. However, there remains a weak correlation between the stroke overlap ratio (relative to PAR) and the onset alignment of PAR and the gesture phrase. Although the correlation's direction aligns with our expectations, its strength does not. As indicated in Table 1, gesture phrases often begin before and end after the overlapping PAR unit. It is plausible to hypothesize that in many instances, the stroke will tend to align more with the PAR's offset, extending into the subsequent IU. This trend can be examined by referring to Figure 3.
+
+```{r analysis, eval=FALSE, include=FALSE}
+### dispersion histograms - normality
+## PAR duration
+ggplot(span_nodup, aes(x = InfoStructure_PAR_duration))+
+  geom_histogram()
+
+## Gesture phrase - ratio, duration, diff_start, diff_end
+# Overlap_ratio
+ggplot(span_gephrase, aes(x = Overlap_ratio))+
+  geom_histogram()
+shapiro.test(span_gephrase$Overlap_ratio)
+
+# Duration
+ggplot(span_gephrase, aes(x = Duration))+
+  geom_histogram()
+
+# Diff_start
+ggplot(span_gephrase, aes(x = Diff_start))+
+  geom_histogram()
+
+# Diff_end
+ggplot(span_gephrase, aes(x = Diff_end))+
+  geom_histogram()
+
+## stroke - ratio, duration, diff_start, diff_end
+# Overlap_ratio
+ggplot(span_stroke, aes(x = Overlap_ratio))+
+  geom_histogram()
+
+# Duration
+ggplot(span_stroke, aes(x = Duration))+
+  geom_histogram()
+
+# Diff_start
+ggplot(span_stroke, aes(x = Diff_start))+
+  geom_histogram()
+
+# Diff_end
+ggplot(span_stroke, aes(x = Diff_end))+
+  geom_histogram()
+
+## all of them seem normal.
+
+### correlations
+## overlap_ratio and start diff
+# for gesture phrase
+ggscatter(span_gephrase, x = "Overlap_ratio", y = "Diff_start", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Overlap_ratio phrase", ylab = "Diff_start ms")
+
+
+## overlap_ratio and end diff
+# for gesture phrase
+ggscatter(span_gephrase, x = "Overlap_ratio", y = "Diff_end", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Overlap_ratio phrase", ylab = "Diff_end ms")
+
+## PAR duration
+# and gesture phrase
+ggscatter(span_gephrase, x = "InfoStructure_PAR_duration", y = "Duration", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "PAR Duration ms", ylab = "Duration GEPhrase ms")
+
+# and stroke
+ggscatter(span_stroke, x = "InfoStructure_PAR_duration", y = "Duration", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "PAR Duration ms", ylab = "Duration stroke ms")
+
+```
+
+```{r correlation overlap and start-end diff}
+### correlations
+## overlap_ratio and start diff
+# for stroke
+stroke_start <- ggscatter(span_stroke, x = "Overlap_ratio", y = "Diff_start",
+                          add = "reg.line", conf.int = TRUE, 
+                          cor.coef = TRUE, cor.method = "pearson",
+                          xlab = "Overlap_ratio stroke", ylab = "Diff_start ms")
+
+## overlap_ratio and end diff
+# for stroke
+stroke_end <- ggscatter(span_stroke, x = "Overlap_ratio", y = "Diff_end", 
+                        add = "reg.line", conf.int = TRUE, 
+                        cor.coef = TRUE, cor.method = "pearson",
+                        xlab = "Overlap_ratio stroke", ylab = "Diff_end ms")
+
+grid.arrange(stroke_start, stroke_end, ncol = 2, nrow  = 1)
+
+
+```
+
+## Discussion points
+
+One lingering question persists: what degree of overlap signifies coordination between a gesture-phrase and the IU? For gesture-phrases, the answer appears straightforward: nearly all gesture-phrases that commence before PAR's onset can be distinguished by a 50% overlap ratio (1st quadrant of Figure 2). However, this pattern is less evident for strokes. It would be intriguing to assess the alignment of strokes (or their central points) with lower-level prosodic events. For instance, we could explore the alignment of strokes with the prosodic nuclei of illocutions or focuses in different types of IUs. This investigation could shed light on why apexes tend to correlate with pitch accents. Nonetheless, this does not necessarily imply the necessity of a time buffer to establish synchronicity.
+
+In conclusion, PAR appears to prompt some level of coordination between gesture and speech boundaries, suggesting that the assumption of phonological synchronicity arising from semantic/pragmatic synchronicity might hold true. However, instances where synchrony is less apparent, such as the interplay of the three synchrony rules, remain ambiguous. It's also noteworthy that while existing literature suggests the need for a buffer time to analyze speech-to-gesture coordination, the data presented thus far have not incorporated any buffer. We contend that the dispersion of boundaries is better elucidated in terms of the overlap ratio rather than relying on a buffer time, which could introduce arbitrary elements into the analysis.
+
+## References
+
+1\.
+
+2\.
