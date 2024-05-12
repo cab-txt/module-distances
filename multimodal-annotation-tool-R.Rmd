@@ -39,18 +39,12 @@ This tool can be used for a single file as well as for a batch. If you are using
 4.  To install the required dependencies, you can use the provided requirements.txt file by typing pip install -r requirements.txt in the command line.
 
 ## Running tool
-
-```{python installing requirements}
-## go to cmd to run config.ini file #
-import os
-#
-#current_directory = os.getcwd()
-print("Current working directory:", current_directory)
-#
-%cd multimodal-annotation-distance
-#
-### installing requirements
-!pip install -r requirements.txt
+```{r using terminal}
+# STEP 1: clone repository
+# STEP 2: either use the R terminal or go to cmd, containing the multimodal_annotation_distance.py file
+# STEP 3: assuming you are using R Studio, go to the Terminal (below, second tab after the console tab)
+# STEP 4: installing requirements
+# pip install -r requirements.txt
 #
 ```
 
@@ -62,9 +56,9 @@ The configuration file indicates which tiers you want to compare and how do you 
 
 Activate your Python virtual environment. To run the program, inside the directory where the mu,ltimodal_annotation_distance.py file is located, type the following in the command line: python multimodal_annotation_distance.py --config-file-path path/to/config.ini.
 
-```{python running tool}
-## running multimodal-distance-tool -- it can take a bit to run ##
-!python multimodal_annotation_distance.py --config-file-path ./config_example_span.ini
+```{r running tool}
+## running multimodal-distance-tool at the terminal -- it can take a bit to run ##
+# python multimodal_annotation_distance.py --config-file-path ./config_example_span.ini"
 ```
 
 Now that you have the dataset, we can work with it in R.
