@@ -7,7 +7,7 @@ output: html_document
 
 # Info documents
 
-This tutorial can be used to compare multiple annotations in ELAN using the multimodal-annotation-distance tool. It requires an annotated file in ELAN (.eaf) format and outputs a table with the reference tier and the compared tiers. Disclaimer: It does not directly outputs the data in tidy format.
+This tutorial can be used to compare multiple annotations in ELAN (Wittenburg et al., 2006) using the multimodal-annotation-distance tool. It requires an annotated file in ELAN (.eaf) format and outputs a table with the reference tier and the compared tiers.
 
 The tool multimodal-annotation-distance can be pulled from: <https://github.com/JorgeFCS/multimodal-annotation-distance.git>
 
@@ -27,43 +27,55 @@ We will use the span comparison in this tutorial. The *span comparison* takes th
 
 In case you want to use the *point comparison*, you should have in mind that this function searches for the offset of the reference tier and outputs the closest match in the compared tiers. It is specially designed to analyze items that do not have a span in time, such as apexes or pitch accents (when considered points in time).
 
+It is important to highlight that this tool was created to compare tiers, but it is not a validation tool for the transcriptions or a way to see inter-rater reliability measures. It is rather an enhancement to the *pympi* package (Lubbers and Torreira (2013-2021), as it allows comparison with different tier types (including symbolic).
+
 ### Basic validation previous to use
 
-This tool can be used for a single file as well as for a batch. If you are using it for a batch, be sure that all files have the *exact* same tier name, otherwise it will fail. The media files will not be used at all.
+This tool can be used for a single file as well as for a batch. If you are using it for a batch, be sure that all files have the *exact* same tier name taken into consideration, otherwise it will fail. The media files will not be used at all.
 
-### Installation -- in the command line
+## BGEST - case study
 
-1.  Clone this repository on your local computer.
-2.  In the command line, go to the repository containing the multimodal_annotation_distance.py file.
-3.  Create and activate a virtual environment of your preference (e.g., Conda or virtualenv).
-4.  To install the required dependencies, you can use the provided requirements.txt file by typing pip install -r requirements.txt in the command line.
-
-## Running tool
-```{r using terminal}
-# STEP 1: clone repository
-# STEP 2: either use the R terminal or go to cmd, containing the multimodal_annotation_distance.py file
-# STEP 3: assuming you are using R Studio, go to the Terminal (below, second tab after the console tab)
-# STEP 4: installing requirements
-# pip install -r requirements.txt
-#
-```
+In this case study, we will look in the BGEST Corpus (Barros, 2021) to see how gesture phrases and strokes synchronize to non terminal prosodic units of Parentheticals. So we looked at the reference tier *InfoStructure* for the searched annotation value *PAR*, and compared to the tiers *GE-Phrase* and *GE-Phase*. All this information is in the `config_example_span.ini` file.
 
 ### Setting up the config.ini file
 
-The configuration file indicates which tiers you want to compare and how do you want to compare them. It requires following information: - Path of the directory containing the .eaf files to analyze. - Path to the directory in which to save the results. - Name of the results file with extension (e.g., results.csv) - Reference tier against to which we want to perform the comparison. - Value in the reference tier to search for. - Mode of operation. Either `span` or `point_comparison` - Buffer time in ms (if you do not want a buffer time, type 0) - Tiers to compare against the reference tier. - Enter the comparison tiers separated by commas (e.g.: tier1,tier2)
+The configuration file indicates which tiers you want to compare and how do you want to compare them. It requires following information:
+
+\- Path of the directory containing the .eaf files to analyze.
+
+\- Path to the directory in which to save the results.
+
+\- Name of the results file with extension (e.g., results.csv)
+
+\- Reference tier against to which we want to perform the comparison.
+
+\- Value in the reference tier to search for.
+
+\- Mode of operation. Either `span` or `point_comparison`
+
+\- Buffer time in ms (if you do not want a buffer time, use 0)
+
+\- Tiers to compare against the reference tier.
+
+\- Enter the comparison tiers separated by commas (e.g.: tier1,tier2) -- but no space between them
 
 ### Usage
 
-Activate your Python virtual environment. To run the program, inside the directory where the mu,ltimodal_annotation_distance.py file is located, type the following in the command line: python multimodal_annotation_distance.py --config-file-path path/to/config.ini.
+Considering that you are running this in R Studio, the first step is to install the requirements and run the tool in the Terminal tab (this tab is next to the console, on the bottom of the screen). Before running the lines below, make the following steps: 1. Clone the repository from <https://github.com/JorgeFCS/multimodal-annotation-distance.git> 2. Set the directory to the folder containing the multimodal_annotation_distance.py file 3. Install the requirements in R Studio terminal tab 4. Run the tool using the command line below:
 
-```{r running tool}
+```{r running tool, eval=FALSE, warning=FALSE, include=FALSE}
+# STEP 1: clone repository
+# STEP 2: set the directory to the folder containing the multimodal_annotation_distance.py file
+# STEP 3: assuming you are using R Studio, run the following lines in the terminal tab
+## installing requirements
+cd multimodal-annotation-distance
+pip install -r requirements.txt
+
 ## running multimodal-distance-tool at the terminal -- it can take a bit to run ##
-# python multimodal_annotation_distance.py --config-file-path ./config_example_span.ini"
+python multimodal_annotation_distance.py --config-file-path ./config_example_span.ini
 ```
 
-Now that you have the dataset, we can work with it in R.
-
-## Data Analysis - case study
+### Data exploration
 
 First, import the dataset.
 
@@ -78,8 +90,10 @@ library(viridis)
 # load datasets #
 ## config.ini:
 ## span_PAR : mode span, reference unit InfoStructure, reference value PAR, comparison between GE-Phrase,GE-Phase
-span_PAR <- read.csv("H:/2024n1 Envision Box - LREC/multimodal-annotation-distance/bgest_spancomparison.csv")
+span_PAR <- read.csv("multimodal-annotation-distance/bgest_spancomparison.csv")
 
+
+# It does not directly outputs the data in tidy format. 
 ```
 
 The dataset for the *span comparison* should look like this, with following values:
@@ -126,7 +140,7 @@ str(span_PAR)
 
 ```
 
-### Pre-processing
+#### Pre-processing
 
 It might require some pre-processing, such as mislabeled data or duplicates.
 
@@ -144,6 +158,8 @@ duplicates <- duplicated(span_PAR)
 span_nodup <- span_PAR[!duplicates, ]
 
 ```
+
+## Data Analysis
 
 ### Dispersion
 
@@ -181,7 +197,7 @@ dispersion_stroke <- span_nodup %>%
 
 ```
 
-In this dispersion table we can understand if the compared tier annotations, gesture phrases and strokes, start after or before the reference tier selected annotation. As CST_M is positive and CET_M is negative, we can infer that the gesture phrase tends to start before and to end after the prosodic unit. The stroke, on the other hand, has the opposite pattern, which makes sense as it is included in the gesture phrase.
+In this dispersion table we can understand if the compared tier annotations, gesture phrases and strokes, start after or before the reference tier selected annotation. As CST_M is positive and CET_M is negative, we can infer that the gesture phrase tends to start before and to end after the Parenthetical unit. The stroke, on the other hand, has the opposite pattern, which makes sense as it is included in the gesture phrase.
 
 What we can also state from those values is they show high variance, as all standard deviations are above 640ms. In comparison to the informational unit studied, PAR, which has a median duration of 1250ms (SD= 547.95). This indicates that there is variation that can span up to half of the analyzed unit and three times the value of 200 ms normally assumed in the literature (Loehr, 2004) as a degree of mismatch between a prosodic and a gestural event.
 
@@ -252,11 +268,14 @@ point_stroke <- ggplot(span_stroke, aes(Overlap_ratio, Diff_start)) +
 grid.arrange(point_phrase, point_stroke, ncol = 2, nrow  = 1)
 
 ```
+
 Figure 2: Overlap ratio by centered times for gesture phrase and strokes
 
 ### Correlation of alignment of onsets and overlap ratio for gesture phrase and strokes
 
-What occurs with the onset alignment of PAR and the gesture-phrase containing the stroke? It would seem logical to assume that if a gesture-phrase overlaps more with PAR, it would also overlap more with its corresponding stroke. However, there remains a weak correlation between the stroke overlap ratio (relative to PAR) and the onset alignment of PAR and the gesture phrase. Although the correlation's direction aligns with our expectations, its strength does not. As indicated in Table 1, gesture phrases often begin before and end after the overlapping PAR unit. It is plausible to hypothesize that in many instances, the stroke will tend to align more with the PAR's offset, extending into the subsequent IU. This trend can be examined by referring to Figure 3.
+What occurs with the onset alignment of PAR and the gesture-phrase containing the stroke? It would seem logical to assume that if a gesture-phrase overlaps more with PAR, it would also overlap more with its corresponding stroke.
+
+Looking at gesture-phrases that contain the stroke in relation to the overlap ratio relative to PAR, there is only a weak correlation of the onset alignment of PAR and the gesture phrase. Although the correlation's direction aligns with our expectations (higher the overlap, smaller the centered onset time), its strength does not. As indicated in Table 1, gesture phrases often begin before and end after the overlapping PAR unit. It is plausible to hypothesize that in many instances, the stroke will tend to align more with the PAR's offset, extending into the subsequent IU. This trend can be examined by referring to Figure 3.
 
 ```{r analysis, eval=FALSE, include=FALSE}
 ### dispersion histograms - normality
@@ -355,12 +374,16 @@ grid.arrange(stroke_start, stroke_end, ncol = 2, nrow  = 1)
 
 ## Discussion points
 
-One lingering question persists: what degree of overlap signifies coordination between a gesture-phrase and the IU? For gesture-phrases, the answer appears straightforward: nearly all gesture-phrases that commence before PAR's onset can be distinguished by a 50% overlap ratio (1st quadrant of Figure 2). However, this pattern is less evident for strokes. It would be intriguing to assess the alignment of strokes (or their central points) with lower-level prosodic events. For instance, we could explore the alignment of strokes with the prosodic nuclei of illocutions or focuses in different types of IUs. This investigation could shed light on why apexes tend to correlate with pitch accents. Nonetheless, this does not necessarily imply the necessity of a time buffer to establish synchronicity.
+One lingering question persists: what degree of overlap signifies coordination between a gesture-phrase and the IU? For gesture-phrases, the answer appears straightforward: nearly all gesture-phrases that start before PAR's onset can be distinguished by a 50% overlap ratio (1st quadrant of Figure 2). However, this pattern is less evident for strokes. It would be intriguing to assess the alignment of strokes (or their central points) with lower-level prosodic events. This investigation could shed light on why apexes tend to correlate with pitch accents. Nonetheless, this does not necessarily imply the necessity of a time buffer to establish synchronicity.
 
-In conclusion, PAR appears to prompt some level of coordination between gesture and speech boundaries, suggesting that the assumption of phonological synchronicity arising from semantic/pragmatic synchronicity might hold true. However, instances where synchrony is less apparent, such as the interplay of the three synchrony rules, remain ambiguous. It's also noteworthy that while existing literature suggests the need for a buffer time to analyze speech-to-gesture coordination, the data presented thus far have not incorporated any buffer. We contend that the dispersion of boundaries is better elucidated in terms of the overlap ratio rather than relying on a buffer time, which could introduce arbitrary elements into the analysis.
+In conclusion, PAR appears to prompt some level of coordination between gesture and speech boundaries, suggesting that the assumption of phonological synchronicity arising from semantic/pragmatic synchronicity might hold true. It's also noteworthy that while existing literature suggests the need for a buffer time to analyze speech-to-gesture coordination, the data presented thus far have not incorporated any buffer. We contend that the dispersion of boundaries is better elucidated in terms of the overlap ratio rather than relying on a buffer time, which could introduce arbitrary elements into the analysis. For a more in-depth discussion of the data presented here, please refer to Barros et al. (2024).
 
 ## References
 
-1\.
-
-2\.
+1.  Wittenburg, Peter; Brugman, Hennie; Russel, Albert; Klassmann, Alex; Sloetjes, Han. 2006. Elan: a professional framework for multimodality research. In *Proceedings of LREC 2006*, pages 1556--1559. Max Planck Institute for Psycholinguistics, The Language Archive, Nijmegen. [Online; accessed 2020-03-07].
+2.  Barros, Camila A. (2021). A relação entre unidades gestuais e quebras prosódicas: o caso da unidade\
+    informacional parentético. Unpublished MA Thesis at Universidade Federal de Minas Gerais.
+3.  D.P. Loehr. 2004. Gesture and intonation. Ph.D. thesis, Georgetown University, Georgetown.
+4.  Lubbers, Mart; Torreira, Francisco. (2013-2021). *pympi-ling*: a python module for processing elans eaf\
+    and praats textgrid annotation files. <https://pypi.python.org/pypi/pympi-ling>. Version 1.70.
+5.  Barros, Camila A.; Ciprián-Sánchez, Jorge Francisco; Mendes Santos, Saulo. (2024) *A Tool for Determining Distances and Overlaps between Multimodal Annotations.* In LREC-COLING 2024.
