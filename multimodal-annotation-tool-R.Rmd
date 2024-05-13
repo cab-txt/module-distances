@@ -222,7 +222,7 @@ point_combo
 
 ### Visualizing overlap ratio and centered starting times
 
-Another way to see this is to plot a scatterplot that takes the starting time of the comparison tiers (centered values) by the overlap ratio (Figure 2). The thought behind this is that the higher the overlap, the tighter is the connection between the reference tier and comparison tier. Here the dispersion is color coded regarding the quantiles, purple represents the second quartile and the third quartiles; and grey stands for the first and fourth quartiles. Points on the black horizontal line (0 value) indicate that the starting points of the gesture phrase (upper graph) or stroke (lower graph) perfectly match the PAR's onset. The blue vertical line indicates when the overlap has a 50% ratio.
+Another way to see this is to plot a scatterplot that takes the starting time of the comparison tiers (centered values) by the overlap ratio (Figure 2). The thought behind this is that the higher the overlap, the tighter is the connection between the reference tier and comparison tier. Here the dispersion is color coded regarding the quantiles, purple represents the second quartile and the third quartiles; and grey stands for the first and fourth quartiles. Points on the black horizontal line (0 value) indicate that the starting points of the gesture phrase (left graph) or stroke (right graph) perfectly match the PAR's onset. The blue vertical line indicates when the overlap has a 50% ratio.
 
 ```{r creating images -- distribution on strokes and ge-phrases}
 # based on quantiles #
