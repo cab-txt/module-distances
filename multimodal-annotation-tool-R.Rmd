@@ -275,7 +275,7 @@ Figure 2: Overlap ratio by centered times for gesture phrase and strokes
 
 What occurs with the onset alignment of PAR and the gesture-phrase containing the stroke? It would seem logical to assume that if a gesture-phrase overlaps more with PAR, it would also overlap more with its corresponding stroke.
 
-Looking at gesture-phrases that contain the stroke in relation to the overlap ratio relative to PAR, there is only a weak correlation of the onset alignment of PAR and the gesture phrase. Although the correlation's direction aligns with our expectations (higher the overlap, smaller the centered onset time), its strength does not. As indicated in Table 1, gesture phrases often begin before and end after the overlapping PAR unit. It is plausible to hypothesize that in many instances, the stroke will tend to align more with the PAR's offset, extending into the subsequent IU. This trend can be examined by referring to Figure 3.
+Looking at gesture-phrases that contain the stroke in relation to the overlap ratio relative to PAR, there is only a weak correlation of the onset alignment of PAR and the gesture phrase. Although the correlation's direction aligns with our expectations (higher the overlap, smaller the centered onset time), its strength does not. As indicated in Table 1, gesture phrases often begin before and end after the overlapping PAR unit. This trend can be examined by referring to Figure 3.
 
 ```{r analysis, eval=FALSE, include=FALSE}
 ### dispersion histograms - normality
