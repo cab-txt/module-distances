@@ -5,4 +5,4 @@ For multimodal annotation tool:
 https://github.com/JorgeFCS/multimodal-annotation-distance.git
 
 For extended analysis of the data in case study:
-https://osf.io/qfbtg/?view_only=979483c6cca04f3fbf53fb34bbe86534
+doi.org/10.17605/OSF.IO/QFBTG
