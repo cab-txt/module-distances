@@ -11,7 +11,7 @@ This tutorial can be used to compare multiple annotations in ELAN (Wittenburg et
 
 The tool multimodal-annotation-distance can be pulled from: <https://github.com/JorgeFCS/multimodal-annotation-distance.git>
 
-To cite the tool: Barros, Camila A.; Ciprián-Sánchez, Jorge Francisco; Mendes Santos, Saulo. (2024) *A Tool for Determining Distances and Overlaps between Multimodal Annotations.* In LREC-COLING 2024
+To cite the tool: Barros, C. A., Ciprián-Sánchez, J. F., & Santos, S. M. (2024). A Tool for Determining Distances and Overlaps between Multimodal Annotations. In N. Calzolari, M.-Y. Kan, V. Hoste, A. Lenci, S. Sakti, & N. Xue (Eds.), *Proceedings of the 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2024)* (pp. 1705–1714). ELRA and ICCL. https://aclanthology.org/2024.lrec-main.150
 
 ## Multimodal annotation tools
 
@@ -386,4 +386,4 @@ In conclusion, PAR appears to prompt some level of coordination between gesture 
 3.  D.P. Loehr. 2004. Gesture and intonation. Ph.D. thesis, Georgetown University, Georgetown.
 4.  Lubbers, Mart; Torreira, Francisco. (2013-2021). *pympi-ling*: a python module for processing elans eaf\
     and praats textgrid annotation files. <https://pypi.python.org/pypi/pympi-ling>. Version 1.70.
-5.  Barros, Camila A.; Ciprián-Sánchez, Jorge Francisco; Mendes Santos, Saulo. (2024) *A Tool for Determining Distances and Overlaps between Multimodal Annotations.* In LREC-COLING 2024.
+5.  Barros, C. A., Ciprián-Sánchez, J. F., & Santos, S. M. (2024). A Tool for Determining Distances and Overlaps between Multimodal Annotations. In N. Calzolari, M.-Y. Kan, V. Hoste, A. Lenci, S. Sakti, & N. Xue (Eds.), *Proceedings of the 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2024)* (pp. 1705–1714). ELRA and ICCL. https://aclanthology.org/2024.lrec-main.150
